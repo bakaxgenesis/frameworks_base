@@ -42,6 +42,9 @@
     <string name="screenrecord_hevc_switch_label">HEVC encoding</string>
     <string name="screenrecord_hevc_switch_summary">Use the more efficient HEVC encoder</string>
 
+    <!-- Title of statusbar tuner -->
+    <string name="status_bar_icons">Status bar icons</string>
+
     <!-- Data usage info in QS footer -->
     <string name="usage_data">used today</string>
     <string name="usage_data_default_suffix">Data</string>
