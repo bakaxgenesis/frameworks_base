@@ -15,6 +15,9 @@
  * limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Screenshot Delete Toast -->
+    <string name="delete_screenshot_toast">Screenshot deleted</string>
+
     <!-- Text while recognizing face -->
     <string name="face_unlock_recognizing">Recognizing face...</string>
 
