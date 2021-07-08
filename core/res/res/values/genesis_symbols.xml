@@ -54,6 +54,9 @@
     <java-symbol type="string" name="config_netflixSpoofModel" />
     <java-symbol type="bool" name="config_spoofGooglePhotos" />
 
+    <!-- For dynamic default font styles -->
+    <java-symbol type="string" name="config_bodyFontFamily" />
+
     <!-- Advanced reboot -->
     <java-symbol type="string" name="reboot_to_recovery_title" />
     <java-symbol type="string" name="reboot_to_recovery_message" />
