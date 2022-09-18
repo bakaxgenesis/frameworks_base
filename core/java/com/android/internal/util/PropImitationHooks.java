@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2022 Paranoid Android
+ *           (C) 2023 StatiXOS
  *           (C) 2023 ArrowOS
  *           (C) 2023 The LibreMobileOS Foundation
  *
@@ -45,16 +46,30 @@ public class PropImitationHooks {
 
     private static final String PACKAGE_ARCORE = "com.google.ar.core";
     private static final String PACKAGE_FINSKY = "com.android.vending";
+    private static final String PACKAGE_GBOARD = "com.google.android.inputmethod.latin";
     private static final String PACKAGE_GMS = "com.google.android.gms";
     private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
     private static final String PACKAGE_GPHOTOS = "com.google.android.apps.photos";
     private static final String PACKAGE_NETFLIX = "com.netflix.mediaclient";
+    private static final String PACKAGE_SETUPWIZARD = "com.google.android.setupwizard";
+    private static final String PACKAGE_SUBSCRIPTION_RED = "com.google.android.apps.subscriptions.red";
+    private static final String PACKAGE_TURBO = "com.google.android.apps.turbo";
+    private static final String PACKAGE_VELVET = "com.google.android.googlequicksearchbox";
 
     private static final String PROP_SECURITY_PATCH = "persist.sys.pihooks.security_patch";
     private static final String PROP_FIRST_API_LEVEL = "persist.sys.pihooks.first_api_level";
 
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY = ComponentName.unflattenFromString(
             "com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity");
+
+    private static final Map<String, String> sPixel8Props = Map.of(
+        "BRAND", "google",
+        "MANUFACTURER", "Google",
+        "DEVICE", "husky",
+        "PRODUCT", "husky",
+        "MODEL", "Pixel 8 Pro",
+        "FINGERPRINT", "google/husky/husky:14/AP1A.240505.005/11677807:user/release-keys"
+    );
 
     private static final Map<String, String> sPixelXLProps = Map.of(
         "BRAND", "google",
@@ -110,6 +125,7 @@ public class PropImitationHooks {
 
         /* Set certified properties for GMSCore
          * Set stock fingerprint for ARCore
+         * Set Pixel 8 Pro for some Google Apps
          * Set Pixel XL for Google Photos
          * Set custom model for Netflix
          */
@@ -118,6 +134,11 @@ public class PropImitationHooks {
         } else if (!sStockFp.isEmpty() && packageName.equals(PACKAGE_ARCORE)) {
             dlog("Setting stock fingerprint for: " + packageName);
             setPropValue("FINGERPRINT", sStockFp);
+        } else if (packageName.equals(PACKAGE_GBOARD) || packageName.equals(PACKAGE_GMS)
+                   || packageName.equals(PACKAGE_SETUPWIZARD) || packageName.equals(PACKAGE_SUBSCRIPTION_RED)
+                   || packageName.equals(PACKAGE_TURBO) || packageName.equals(PACKAGE_VELVET)) {
+            dlog("Spoofing Pixel 8 Pro for: " + packageName);
+            sPixel8Props.forEach(PropImitationHooks::setPropValue);
         } else if (sIsPhotos) {
             dlog("Spoofing Pixel XL for: " + packageName);
             sPixelXLProps.forEach(PropImitationHooks::setPropValue);
