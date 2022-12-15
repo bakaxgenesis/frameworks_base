@@ -46,8 +46,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Trace;
+import android.os.UserHandle;
 import android.os.VibrationAttributes;
 import android.os.VibrationEffect;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
@@ -221,6 +223,11 @@ public class UdfpsController implements DozeReceiver, Dumpable {
     private boolean mAttemptedToDismissKeyguard;
     private final Set<Callback> mCallbacks = new HashSet<>();
 
+    private boolean mDisableSmartPixels;
+    private boolean mSmartPixelsFlag;
+    private boolean mSmartPixelsEnabled;
+    private boolean mSmartPixelsOnPowerSave;
+
     @VisibleForTesting
     public static final VibrationAttributes UDFPS_VIBRATION_ATTRIBUTES =
             new VibrationAttributes.Builder()
@@ -242,6 +249,9 @@ public class UdfpsController implements DozeReceiver, Dumpable {
     private final ScreenLifecycle.Observer mScreenObserver = new ScreenLifecycle.Observer() {
         @Override
         public void onScreenTurnedOn() {
+            if (mDisableSmartPixels) {
+                isSmartPixelsEnabled();
+            }
             mScreenOn = true;
             if (mAodInterruptRunnable != null) {
                 mAodInterruptRunnable.run();
@@ -768,6 +778,48 @@ public class UdfpsController implements DozeReceiver, Dumpable {
 
         udfpsHapticsSimulator.setUdfpsController(this);
         udfpsShell.setUdfpsOverlayController(mUdfpsOverlayController);
+        mDisableSmartPixels = mContext.getResources().getBoolean(com.android.systemui.res.R.bool.config_disableSmartPixelsOnUDFPS);
+    }
+
+    private void isSmartPixelsEnabled() {
+        if (!mSmartPixelsFlag) {
+            mSmartPixelsEnabled = Settings.System.getIntForUser(
+                    mContext.getContentResolver(), Settings.System.SMART_PIXELS_ENABLE,
+                    0, UserHandle.USER_CURRENT) != 0;
+            Log.i(TAG, "SmartPixels: SmartPixels enabled - " + mSmartPixelsEnabled);
+            mSmartPixelsOnPowerSave = Settings.System.getIntForUser(
+                    mContext.getContentResolver(), Settings.System.SMART_PIXELS_ON_POWER_SAVE,
+                    0, UserHandle.USER_CURRENT) != 0;
+            Log.i(TAG, "SmartPixels: SmartPixels on Power Save enabled - " + mSmartPixelsOnPowerSave);
+        }
+    }
+
+    private void disableSmartPixels() {
+        Log.i(TAG, "SmartPixels: Disable SmartPixels");
+        if (mSmartPixelsEnabled) {
+            Settings.System.putIntForUser(mContext.getContentResolver(),
+                    Settings.System.SMART_PIXELS_ENABLE,
+                    0, UserHandle.USER_CURRENT);
+        }
+        if (mSmartPixelsOnPowerSave) {
+            Settings.System.putIntForUser(mContext.getContentResolver(),
+                    Settings.System.SMART_PIXELS_ON_POWER_SAVE,
+                    0, UserHandle.USER_CURRENT);
+        }
+    }
+
+    private void enableSmartPixels() {
+        Log.i(TAG, "SmartPixels: Enable SmartPixels");
+        if (mSmartPixelsEnabled) {
+            Settings.System.putIntForUser(mContext.getContentResolver(),
+                    Settings.System.SMART_PIXELS_ENABLE,
+                    1, UserHandle.USER_CURRENT);
+        }
+        if (mSmartPixelsOnPowerSave) {
+            Settings.System.putIntForUser(mContext.getContentResolver(),
+                    Settings.System.SMART_PIXELS_ON_POWER_SAVE,
+                    1, UserHandle.USER_CURRENT);
+        }
     }
 
     /**
@@ -1034,6 +1086,12 @@ public class UdfpsController implements DozeReceiver, Dumpable {
                     + " current: " + mOverlay.getRequestId());
             return;
         }
+        if (mDisableSmartPixels) {
+            if (!mSmartPixelsFlag && (mSmartPixelsEnabled || mSmartPixelsOnPowerSave)) {
+                disableSmartPixels();
+            }
+            mSmartPixelsFlag = true;
+        }
         if (isOptical()) {
             mLatencyTracker.onActionStart(ACTION_UDFPS_ILLUMINATE);
         }
@@ -1102,6 +1160,14 @@ public class UdfpsController implements DozeReceiver, Dumpable {
         mExecution.assertIsMainThread();
         mActivePointerId = MotionEvent.INVALID_POINTER_ID;
         mAcquiredReceived = false;
+
+        if (mDisableSmartPixels) {
+            if (mSmartPixelsFlag && (mSmartPixelsEnabled || mSmartPixelsOnPowerSave)) {
+                enableSmartPixels();
+            }
+            mSmartPixelsFlag = false;
+        }
+
         if (mOnFingerDown) {
             mFingerprintManager.onPointerUp(requestId, mSensorProps.sensorId, pointerId, x,
                     y, minor, major, orientation, time, gestureStart, isAod);
