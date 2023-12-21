@@ -272,5 +272,6 @@ public class SecureSettings {
         Settings.Secure.VISUAL_QUERY_ACCESSIBILITY_DETECTION_ENABLED,
         Settings.Secure.TETHERING_ALLOW_VPN_UPSTREAMS,
         Settings.Secure.BERRY_BLACK_THEME,
+        Settings.Secure.VPN_ENFORCE_DNS,
     };
 }
