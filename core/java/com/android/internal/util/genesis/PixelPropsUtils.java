@@ -133,7 +133,7 @@ public class PixelPropsUtils {
 
     private static volatile String[] sCertifiedProps;
 
-    private static volatile boolean sIsGms, sIsFinsky, sIsSetupWizard, sIsGoogle, sIsSamsung;
+    private static volatile boolean sIsGms, sIsGoogle, sIsSamsung;
 
     private static String getBuildID(String fingerprint) {
         Pattern pattern = Pattern.compile("([A-Za-z0-9]+\\.\\d+\\.\\d+\\.\\w+)");
@@ -276,8 +276,6 @@ public class PixelPropsUtils {
         sIsGoogle = packageName.toLowerCase().contains("com.google");
         sIsSamsung = packageName.toLowerCase().contains("samsung") || processName.toLowerCase().contains("samsung");
         sIsGms = packageName.equals("com.google.android.gms") && processName.equals("com.google.android.gms.unstable");
-        sIsFinsky = packageName.equals("com.android.vending");
-        sIsSetupWizard = packageName.equals("com.google.android.setupwizard");
 
         if (shouldTryToCertifyDevice()) {
             return;
@@ -391,24 +389,6 @@ public class PixelPropsUtils {
         final String callingPackage = context.getPackageManager().getNameForUid(callingUid);
         dlog("shouldBypassTaskPermission: callingPackage:" + callingPackage);
         return callingPackage != null && callingPackage.toLowerCase().contains("google");
-    }
-
-    private static boolean isCallerSafetyNet() {
-        return Arrays.stream(Thread.currentThread().getStackTrace())
-                        .anyMatch(elem -> elem.getClassName().toLowerCase()
-                            .contains("droidguard"));
-    }
-
-    public static void onEngineGetCertificateChain() {
-        // Check stack for SafetyNet or Play Integrity
-        if (sIsSetupWizard) {
-            Process.killProcess(Process.myPid());
-            return;
-        }
-        if (isCallerSafetyNet() || sIsFinsky) {
-            dlog("Blocked key attestation");
-            throw new UnsupportedOperationException();
-        }
     }
 
     public static void dlog(String msg) {
